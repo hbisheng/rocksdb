@@ -30,24 +30,26 @@ uint64_t PackFileNumberAndPathId(uint64_t number, uint64_t path_id) {
 Status FileMetaData::UpdateBoundaries(const Slice& key, const Slice& value,
                                       SequenceNumber seqno,
                                       ValueType value_type) {
-  if (value_type == kTypeBlobIndex) {
-    BlobIndex blob_index;
-    const Status s = blob_index.DecodeFrom(value);
-    if (!s.ok()) {
-      return s;
-    }
+  // Do not check the validity of the blob value here, since Titan blob index
+  // encoding is different from the RocksDB blob index encoding.
+  // if (value_type == kTypeBlobIndex) {
+  //   BlobIndex blob_index;
+  //   const Status s = blob_index.DecodeFrom(value);
+  //   if (!s.ok()) {
+  //     return s;
+  //   }
 
-    if (!blob_index.IsInlined() && !blob_index.HasTTL()) {
-      if (blob_index.file_number() == kInvalidBlobFileNumber) {
-        return Status::Corruption("Invalid blob file number");
-      }
+  //   if (!blob_index.IsInlined() && !blob_index.HasTTL()) {
+  //     if (blob_index.file_number() == kInvalidBlobFileNumber) {
+  //       return Status::Corruption("Invalid blob file number");
+  //     }
 
-      if (oldest_blob_file_number == kInvalidBlobFileNumber ||
-          oldest_blob_file_number > blob_index.file_number()) {
-        oldest_blob_file_number = blob_index.file_number();
-      }
-    }
-  }
+  //     if (oldest_blob_file_number == kInvalidBlobFileNumber ||
+  //         oldest_blob_file_number > blob_index.file_number()) {
+  //       oldest_blob_file_number = blob_index.file_number();
+  //     }
+  //   }
+  // }
 
   if (smallest.size() == 0) {
     smallest.DecodeFrom(key);
