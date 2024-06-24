@@ -169,6 +169,10 @@ void WriteAmpBasedRateLimiter::Request(int64_t bytes, const Env::IOPriority pri,
     return;
   }
 
+
+
+
+  assert(pri >= 0 && pri < Env::IO_TOTAL);
   ++total_requests_[pri];
 
   if (available_bytes_ >= bytes) {
