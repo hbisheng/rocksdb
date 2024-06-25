@@ -265,6 +265,7 @@ class WriteThread {
         : sync(write_options.sync),
           no_slowdown(write_options.no_slowdown),
           disable_wal(write_options.disableWAL),
+          rate_limiter_priority(write_options.rate_limiter_priority),
           disable_memtable(_disable_memtable),
           batch_cnt(0),
           pre_release_callback(_pre_release_callback),
