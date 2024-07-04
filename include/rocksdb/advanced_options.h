@@ -1236,7 +1236,7 @@ struct AdvancedColumnFamilyOptions {
   //
   // Default: 0 (no delay)
   // Dynamically changeable through the SetOptions() API.
-  uint32_t bottommost_file_compaction_delay = 0;
+  uint32_t bottommost_file_compaction_delay = 300;
 
   // Create ColumnFamilyOptions with default values for all fields
   AdvancedColumnFamilyOptions();
