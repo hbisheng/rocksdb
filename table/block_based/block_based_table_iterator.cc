@@ -16,6 +16,8 @@ void BlockBasedTableIterator::SeekToFirst() { SeekImpl(nullptr); }
 void BlockBasedTableIterator::SeekImpl(const Slice* target) {
   is_out_of_bound_ = false;
   is_at_first_key_from_index_ = false;
+
+  fprintf(stderr, "[6.29] BlockBasedTableIterator::SeekImpl, before checking CheckPrefixMayMatch");
   if (target && !CheckPrefixMayMatch(*target, IterDirection::kForward)) {
     ResetDataIter();
     return;
@@ -104,6 +106,7 @@ void BlockBasedTableIterator::SeekForPrev(const Slice& target) {
   is_at_first_key_from_index_ = false;
   // For now totally disable prefix seek in auto prefix mode because we don't
   // have logic
+  fprintf(stderr, "[6.29] BlockBasedTableIterator::SeekForPrev, before checking CheckPrefixMayMatch");
   if (!CheckPrefixMayMatch(target, IterDirection::kBackward)) {
     ResetDataIter();
     return;

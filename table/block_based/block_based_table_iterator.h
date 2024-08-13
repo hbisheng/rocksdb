@@ -251,6 +251,7 @@ class BlockBasedTableIterator : public InternalIteratorBase<Slice> {
   void CheckDataBlockWithinUpperBound();
 
   bool CheckPrefixMayMatch(const Slice& ikey, IterDirection direction) {
+    fprintf(stderr, "[6.29] CheckPrefixMayMatch is called!");
     if (need_upper_bound_check_ && direction == IterDirection::kBackward) {
       // Upper bound check isn't sufficient for backward direction to
       // guarantee the same result as total order, so disable prefix

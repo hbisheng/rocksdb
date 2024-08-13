@@ -2056,6 +2056,8 @@ bool BlockBasedTable::PrefixMayMatch(
     const SliceTransform* options_prefix_extractor,
     const bool need_upper_bound_check,
     BlockCacheLookupContext* lookup_context) const {
+
+  ROCKS_LOG_WARN(rep_->ioptions.logger, "[v6.29] BlockBasedTable::PrefixMayMatch is called!");
   if (!rep_->filter_policy) {
     return true;
   }
@@ -2156,6 +2158,8 @@ bool BlockBasedTable::PrefixMayMatch(
     if (!may_match) {
       RecordTick(statistics, BLOOM_FILTER_PREFIX_USEFUL);
     }
+    fprintf(stderr, "[v6.29] BlockBasedTable::PrefixMayMatch recorded metric!");
+    ROCKS_LOG_WARN(rep_->ioptions.logger, "[v6.29] BlockBasedTable::PrefixMayMatch recorded metric!");
   }
 
   return may_match;
@@ -2233,6 +2237,8 @@ bool BlockBasedTable::FullFilterKeyMayMatch(
     may_match =
         filter->KeyMayMatch(user_key_without_ts, prefix_extractor, kNotValid,
                             no_io, const_ikey_ptr, get_context, lookup_context);
+
+    ROCKS_LOG_WARN(rep_->ioptions.logger, "[v6.29][FullFilterKeyMayMatch][rep_->whole_key_filtering] may_match=%d", may_match);
   } else if (!read_options.total_order_seek &&
              !PrefixExtractorChanged(prefix_extractor) &&
              prefix_extractor->InDomain(user_key_without_ts) &&
@@ -2241,6 +2247,9 @@ bool BlockBasedTable::FullFilterKeyMayMatch(
                  prefix_extractor, kNotValid, no_io, const_ikey_ptr,
                  get_context, lookup_context)) {
     may_match = false;
+    ROCKS_LOG_WARN(rep_->ioptions.logger, "[v6.29][FullFilterKeyMayMatch][!PrefixExtractorChanged(prefix_extractor) && prefix_extractor->InDomain(user_key_without_ts)] may_match=%d", may_match);
+  } else {
+    ROCKS_LOG_WARN(rep_->ioptions.logger, "[v6.29][FullFilterKeyMayMatch][no match branch]");
   }
   if (may_match) {
     RecordTick(rep_->ioptions.stats, BLOOM_FILTER_FULL_POSITIVE);
@@ -2274,8 +2283,10 @@ void BlockBasedTable::FullFilterKeysMayMatch(
       PERF_COUNTER_BY_LEVEL_ADD(bloom_filter_useful, filtered_keys,
                                 rep_->level);
     }
+    ROCKS_LOG_WARN(rep_->ioptions.logger, "[v6.29][FullFilterKey->s<-MayMatch][whole_key_filtering]");
   } else if (!read_options.total_order_seek &&
              !PrefixExtractorChanged(prefix_extractor)) {
+
     filter->PrefixesMayMatch(range, prefix_extractor, kNotValid, false,
                              lookup_context);
     RecordTick(rep_->ioptions.stats, BLOOM_FILTER_PREFIX_CHECKED, before_keys);
@@ -2285,6 +2296,7 @@ void BlockBasedTable::FullFilterKeysMayMatch(
       RecordTick(rep_->ioptions.stats, BLOOM_FILTER_PREFIX_USEFUL,
                  filtered_keys);
     }
+    ROCKS_LOG_WARN(rep_->ioptions.logger, "[v6.29][FullFilterKey->s<-MayMatch] PREFIX BRANCH! filter->PrefixesMayMatch BRANCH!");
   }
 }
 
@@ -2292,6 +2304,7 @@ Status BlockBasedTable::Get(const ReadOptions& read_options, const Slice& key,
                             GetContext* get_context,
                             const SliceTransform* prefix_extractor,
                             bool skip_filters) {
+  ROCKS_LOG_WARN(rep_->ioptions.logger, "[BlockBasedTable::Get] start");
   assert(key.size() >= 8);  // key must be internal key
   assert(get_context != nullptr);
   Status s;
@@ -2316,6 +2329,7 @@ Status BlockBasedTable::Get(const ReadOptions& read_options, const Slice& key,
   const bool may_match =
       FullFilterKeyMayMatch(read_options, filter, key, no_io, prefix_extractor,
                             get_context, &lookup_context);
+  ROCKS_LOG_WARN(rep_->ioptions.logger, "[BlockBasedTable::Get] FullFilterKeyMayMatch returned may_match=%d", may_match);
   TEST_SYNC_POINT("BlockBasedTable::Get:AfterFilterMatch");
   if (!may_match) {
     RecordTick(rep_->ioptions.stats, BLOOM_FILTER_USEFUL);
