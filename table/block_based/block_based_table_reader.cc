@@ -1918,7 +1918,10 @@ bool BlockBasedTable::PrefixRangeMayMatch(
     const SliceTransform* options_prefix_extractor,
     const bool need_upper_bound_check, BlockCacheLookupContext* lookup_context,
     bool* filter_checked) const {
+
+  ROCKS_LOG_WARN(rep_->ioptions.logger, "[v8.10][PrefixRangeMayMatch] is called!");    
   if (!rep_->filter_policy) {
+    ROCKS_LOG_WARN(rep_->ioptions.logger, "[v8.10][PrefixRangeMayMatch] rep_->filter_policy is false");    
     return true;
   }
 
@@ -1926,6 +1929,7 @@ bool BlockBasedTable::PrefixRangeMayMatch(
 
   if (rep_->table_prefix_extractor == nullptr) {
     if (need_upper_bound_check) {
+      ROCKS_LOG_WARN(rep_->ioptions.logger, "[v8.10][PrefixRangeMayMatch] need_upper_bound_check is true");    
       return true;
     }
     prefix_extractor = options_prefix_extractor;
@@ -1936,6 +1940,7 @@ bool BlockBasedTable::PrefixRangeMayMatch(
   auto user_key_without_ts =
       ExtractUserKeyAndStripTimestamp(internal_key, ts_sz);
   if (!prefix_extractor->InDomain(user_key_without_ts)) {
+    ROCKS_LOG_WARN(rep_->ioptions.logger, "[v8.10][PrefixRangeMayMatch] !prefix_extractor->InDomain(user_key_without_ts)");    
     return true;
   }
 
@@ -1944,6 +1949,7 @@ bool BlockBasedTable::PrefixRangeMayMatch(
   FilterBlockReader* const filter = rep_->filter.get();
   *filter_checked = false;
   if (filter != nullptr) {
+    ROCKS_LOG_WARN(rep_->ioptions.logger, "[v8.10][PrefixRangeMayMatch] filter != nullptr");
     const bool no_io = read_options.read_tier == kBlockCacheTier;
 
     const Slice* const const_ikey_ptr = &internal_key;
@@ -1954,6 +1960,7 @@ bool BlockBasedTable::PrefixRangeMayMatch(
         read_options);
   }
 
+  ROCKS_LOG_WARN(rep_->ioptions.logger, "[v8.10][PrefixRangeMayMatch] may_match = %d", may_match);
   return may_match;
 }
 
@@ -2053,6 +2060,7 @@ bool BlockBasedTable::FullFilterKeyMayMatch(
       RecordTick(rep_->ioptions.stats, BLOOM_FILTER_USEFUL);
       PERF_COUNTER_BY_LEVEL_ADD(bloom_filter_useful, 1, rep_->level);
     }
+    ROCKS_LOG_WARN(rep_->ioptions.logger, "[v8.10][FullFilterKeyMayMatch][rep_->whole_key_filtering] may_match=%d", may_match);
   } else if (!PrefixExtractorChanged(prefix_extractor) &&
              prefix_extractor->InDomain(user_key_without_ts)) {
     // FIXME ^^^: there should be no reason for Get() to depend on current
@@ -2069,6 +2077,10 @@ bool BlockBasedTable::FullFilterKeyMayMatch(
       // Includes prefix stats
       PERF_COUNTER_BY_LEVEL_ADD(bloom_filter_useful, 1, rep_->level);
     }
+    ROCKS_LOG_WARN(rep_->ioptions.logger, 
+      "[v8.10][FullFilterKeyMayMatch][!PrefixExtractorChanged(prefix_extractor) && prefix_extractor->InDomain(user_key_without_ts)] may_match=%d", may_match);
+  } else {
+    ROCKS_LOG_WARN(rep_->ioptions.logger, "[v8.10][FullFilterKeyMayMatch][no match branch]");
   }
   return may_match;
 }
@@ -2198,9 +2210,15 @@ Status BlockBasedTable::Get(const ReadOptions& read_options, const Slice& key,
                             GetContext* get_context,
                             const SliceTransform* prefix_extractor,
                             bool skip_filters) {
+
+  // TODO => log "Status BlockBasedTable::Get() started"
+  ROCKS_LOG_WARN(rep_->ioptions.logger, "[v8.10][BlockBasedTable::Get] started");
+
   // Similar to Bloom filter !may_match
   // If timestamp is beyond the range of the table, skip
   if (!TimestampMayMatch(read_options)) {
+    // TODO => log "Status BlockBasedTable::Get() started"
+    ROCKS_LOG_WARN(rep_->ioptions.logger, "[v8.10][BlockBasedTable::Get] early return, !TimestampMayMatch(read_options) is true");
     return Status::OK();
   }
   assert(key.size() >= 8);  // key must be internal key
@@ -2228,6 +2246,8 @@ Status BlockBasedTable::Get(const ReadOptions& read_options, const Slice& key,
       FullFilterKeyMayMatch(filter, key, no_io, prefix_extractor, get_context,
                             &lookup_context, read_options);
   TEST_SYNC_POINT("BlockBasedTable::Get:AfterFilterMatch");
+  // TODO => log "Status BlockBasedTable::Get() FullFilterKeyMayMatch result"
+  ROCKS_LOG_WARN(rep_->ioptions.logger, "[v8.10][BlockBasedTable::Get] FullFilterKeyMayMatch returned may_match=%d", may_match);
   if (may_match) {
     IndexBlockIter iiter_on_stack;
     // if prefix_extractor found in block differs from options, disable
