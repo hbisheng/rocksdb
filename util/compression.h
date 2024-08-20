@@ -56,9 +56,6 @@
 // ZSTD_Compress2(), ZSTD_compressStream2() and frame parameters all belong to
 // advanced APIs and require v1.4.0+.
 // https://github.com/facebook/zstd/blob/eb9f881eb810f2242f1ef36b3f3e7014eecb8fa6/lib/zstd.h#L297C40-L297C45
-#if ZSTD_VERSION_NUMBER >= 10400
-#define ZSTD_ADVANCED
-#endif  // ZSTD_VERSION_NUMBER >= 10400
 namespace ROCKSDB_NAMESPACE {
 // Need this for the context allocation override
 // On windows we need to do this explicitly
